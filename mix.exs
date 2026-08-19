@@ -1,8 +1,8 @@
-defmodule NervesSystemRpi5.MixProject do
+defmodule NervesSystemTachyon.MixProject do
   use Mix.Project
 
-  @github_organization "nerves-project"
-  @app :nerves_system_rpi5
+  @github_organization "ringvold"
+  @app :nerves_system_tachyon
   @source_url "https://github.com/#{@github_organization}/#{@app}"
   @version Path.join(__DIR__, "VERSION")
            |> File.read!()
@@ -20,8 +20,7 @@ defmodule NervesSystemRpi5.MixProject do
       package: package(),
       deps: deps(),
       aliases: [
-        loadconfig: [&bootstrap/1],
-        generate_fwup_conf: &generate_fwup_conf/1
+        loadconfig: [&bootstrap/1]
       ],
       docs: docs()
     ]
@@ -55,13 +54,16 @@ defmodule NervesSystemRpi5.MixProject do
       # The :env key is an optional experimental feature for adding environment
       # variables to the crosscompile environment. These are intended for
       # llvm-based tooling that may need more precise processor information.
+      #
+      # The QCM6490 pairs Cortex-A78 and Cortex-A55 cores (Kryo 670). Target
+      # the A55 so generated code runs on all cores.
       env: [
         {"TARGET_ARCH", "aarch64"},
-        {"TARGET_CPU", "cortex_a76"},
+        {"TARGET_CPU", "cortex_a55"},
         {"TARGET_OS", "linux"},
         {"TARGET_ABI", "gnu"},
         {"TARGET_GCC_FLAGS",
-         "-mabi=lp64 -Wl,-z,max-page-size=4096 -Wl,-z,common-page-size=4096 -fstack-protector-strong -mcpu=cortex-a76 -fPIE -pie -Wl,-z,now -Wl,-z,relro"}
+         "-mabi=lp64 -Wl,-z,max-page-size=4096 -Wl,-z,common-page-size=4096 -fstack-protector-strong -mcpu=cortex-a55 -fPIE -pie -Wl,-z,now -Wl,-z,relro"}
       ],
       checksum: package_files()
     ]
@@ -78,14 +80,13 @@ defmodule NervesSystemRpi5.MixProject do
   end
 
   defp description do
-    "Nerves System - Raspberry Pi 5 (64-bits)"
+    "Nerves System - Particle Tachyon (Qualcomm QCM6490, 64-bits)"
   end
 
   defp docs do
     [
       extras: ["README.md", "CHANGELOG.md"],
       main: "readme",
-      assets: %{"assets" => "./assets"},
       source_ref: "v#{@version}",
       source_url: @source_url,
       skip_undefined_reference_warnings_on: ["CHANGELOG.md"]
@@ -97,9 +98,7 @@ defmodule NervesSystemRpi5.MixProject do
       files: package_files(),
       licenses: ["GPL-2.0-only", "GPL-2.0-or-later"],
       links: %{
-        "GitHub" => @source_url,
-        "REUSE Compliance" =>
-          "https://api.reuse.software/info/github.com/nerves-project/nerves_system_rpi5"
+        "GitHub" => @source_url
       }
     ]
   end
@@ -107,20 +106,17 @@ defmodule NervesSystemRpi5.MixProject do
   defp package_files do
     [
       "fwup_include",
+      "linux",
       "rootfs_overlay",
+      "uboot",
       "CHANGELOG.md",
-      "cmdline-a.txt",
-      "cmdline-b.txt",
-      "config.txt",
       "fwup-ops.conf",
-      "fwup.conf.eex",
+      "fwup.conf",
       "LICENSES/*",
-      "linux-6.18.defconfig",
       "mix.exs",
       "nerves_defconfig",
       "post-build.sh",
       "post-createfs.sh",
-      "ramoops-pi4-overlay.dts",
       "README.md",
       "REUSE.toml",
       "VERSION"
@@ -145,16 +141,5 @@ defmodule NervesSystemRpi5.MixProject do
     else
       System.put_env("MIX_TARGET", "target")
     end
-  end
-
-  defp generate_fwup_conf(_args) do
-    template_path = Path.join(__DIR__, "fwup.conf.eex")
-    output_path = Path.join(__DIR__, "fwup.conf")
-
-    Mix.shell().info("Generating fwup.conf")
-
-    content = EEx.eval_file(template_path)
-    File.write!(output_path, content)
-    Mix.shell().info("Successfully generated #{output_path}")
   end
 end

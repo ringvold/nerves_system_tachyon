@@ -1,0 +1,13 @@
+# Nerves configuration fragment applied on top of qcm6490_tachyon_defconfig
+#
+# Store the U-Boot environment raw at the start of the uboot_env GPT
+# partition (scsi 0:3 = LUN 0, partition 3) so that U-Boot, fwup and
+# Elixir's uboot_env library all share the same block. Requires the
+# env-SCSI backport patch in this directory.
+CONFIG_ENV_IS_IN_SCSI=y
+CONFIG_ENV_SCSI_HW_PARTITION="0:3"
+CONFIG_ENV_SIZE=0x20000
+CONFIG_ENV_OVERWRITE=y
+
+# Boot straight into the Nerves boot logic instead of the bootmenu delay
+CONFIG_BOOTDELAY=0

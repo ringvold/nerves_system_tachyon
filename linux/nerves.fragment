@@ -1,0 +1,53 @@
+# Kernel configuration fragment for Nerves on the Particle Tachyon
+# (QCM6490 / sc7280 platform), applied on top of the arm64 arch defconfig
+# of Particle's Ubuntu 6.8 kernel tree.
+#
+# Everything the kernel needs to mount the squashfs root from UFS must be
+# built in — Nerves does not use an initramfs. Expect to iterate on this
+# during Phase 1 bring-up; compare against Particle's shipping Ubuntu config
+# (debian.particle/ annotations in the kernel tree) when something doesn't
+# probe.
+
+# Storage: UFS controller, PHY and SCSI disk support built in for rootfs
+CONFIG_SCSI=y
+CONFIG_BLK_DEV_SD=y
+CONFIG_SCSI_UFSHCD=y
+CONFIG_SCSI_UFSHCD_PLATFORM=y
+CONFIG_SCSI_UFS_QCOM=y
+CONFIG_PHY_QCOM_QMP=y
+CONFIG_PHY_QCOM_QMP_UFS=y
+
+# Core SoC support needed early in boot
+CONFIG_COMMON_CLK_QCOM=y
+CONFIG_SC_GCC_7280=y
+CONFIG_PINCTRL_MSM=y
+CONFIG_PINCTRL_SC7280=y
+CONFIG_QCOM_SCM=y
+CONFIG_QCOM_SMEM=y
+CONFIG_QCOM_COMMAND_DB=y
+CONFIG_QCOM_RPMH=y
+CONFIG_QCOM_RPMHPD=y
+CONFIG_REGULATOR_QCOM_RPMH=y
+CONFIG_INTERCONNECT=y
+CONFIG_INTERCONNECT_QCOM=y
+CONFIG_INTERCONNECT_QCOM_SC7280=y
+CONFIG_ARM_SMMU=y
+CONFIG_ARM_SMMU_QCOM=y
+
+# Serial console (GENI UART, console=ttyMSM0)
+CONFIG_SERIAL_QCOM_GENI=y
+CONFIG_SERIAL_QCOM_GENI_CONSOLE=y
+
+# Filesystems: read-only squashfs root, f2fs application data, FAT boot
+CONFIG_SQUASHFS=y
+CONFIG_SQUASHFS_XZ=y
+CONFIG_SQUASHFS_ZSTD=y
+CONFIG_F2FS_FS=y
+CONFIG_MSDOS_FS=y
+CONFIG_VFAT_FS=y
+CONFIG_NLS_CODEPAGE_437=y
+CONFIG_NLS_ISO8859_1=y
+
+# Hardware watchdog for Erlang heart
+CONFIG_WATCHDOG=y
+CONFIG_QCOM_WDT=y

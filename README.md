@@ -1,190 +1,124 @@
-# Raspberry Pi 5 Model B (64-bit)
+# Nerves System for the Particle Tachyon
 
-[![Hex version](https://img.shields.io/hexpm/v/nerves_system_rpi5.svg "Hex version")](https://hex.pm/packages/nerves_system_rpi5)
-[![CI](https://github.com/nerves-project/nerves_system_rpi5/actions/workflows/ci.yml/badge.svg)](https://github.com/nerves-project/nerves_system_rpi5/actions/workflows/ci.yml)
-[![REUSE status](https://api.reuse.software/badge/github.com/nerves-project/nerves_system_rpi5)](https://api.reuse.software/info/github.com/nerves-project/nerves_system_rpi5)
+This is the base Nerves System configuration for the
+[Particle Tachyon](https://www.particle.io/tachyon/) single-board computer
+(Qualcomm Dragonwing QCM6490).
 
-This is the base Nerves System configuration for the Raspberry Pi 5 Model B.
+**Status: pre-alpha, does not boot on hardware yet.** See
+[project-brief.md](project-brief.md) for the plan and current phase.
 
-*This is the `main` branch. If you are customizing a `v0.x` system, please see
-the `maint-v0.x` branch. See the "Upgrading to 2.0" section if you are upgrading
-your Nerves system dependency.*
+| Feature        | Description                                            |
+| -------------- | ------------------------------------------------------ |
+| CPU            | Qualcomm QCM6490 (8× Kryo 670, aarch64)                |
+| Memory         | 4–8 GB DRAM                                            |
+| Storage        | 64–128 GB UFS                                          |
+| Linux kernel   | Particle's Qualcomm-based kernel fork                  |
+| IEx terminal   | Serial console via the 10-pin debug connector          |
+| GPIO, I2C, SPI | Yes - [Elixir Circuits](https://github.com/elixir-circuits) (40-pin header) |
+| WiFi           | Wi-Fi 6E (ath11k / WCN6750) — planned                  |
+| 5G modem       | Quectel baseband via QMI — planned                     |
+| Ethernet       | No built-in Ethernet (USB adapters possible)           |
+| HW watchdog    | Planned                                                |
 
-**IMPORTANT:** If your Raspberry Pi 5 was manufactured a long time ago, please
-upgrade the bootloader EEPROM firmware. This has fixed issues preventing devices
-from booting or rebooting. Raspberry Pi OS has a [reliable way of updating the
-EEPROM](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#bootloader_update_stable).
-You may have success with
-[nerves_rpi_eeprom](https://github.com/fhunleth/nerves_rpi_eeprom) if you're
-running a pre-2.0 firmware and haven't upgraded yet.
+## Architecture
 
+The Tachyon boots through Qualcomm's proprietary boot chain into open-source
+U-Boot, which then boots Linux:
 
-![Raspberry Pi 5 image](assets/images/RaspberryPi_5B.svg)
-<br><sup>[Efa / Wikimedia Commons / CC BY-SA
-4.0](https://en.wikipedia.org/wiki/Raspberry_Pi#/media/File:RaspberryPi_5B_28-08-2024.svg)</sup>
-
-| Feature              | Description                      |
-| -------------------- | -------------------------------- |
-| CPU                  | 2.4 GHz quad-core Cortex-A76     |
-| Memory               | 4 GB or 8 GB DRAM                |
-| Storage              | MicroSD                          |
-| Linux kernel         | 6.18 w/ Raspberry Pi patches     |
-| IEx terminal         | HDMI and USB keyboard (can be changed to UART) |
-| GPIO, I2C, SPI       | Yes - [Elixir Circuits](https://github.com/elixir-circuits) |
-| ADC                  | No                               |
-| PWM                  | Yes, but no Elixir support       |
-| UART                 | 2 available - `ttyAMA10`, `ttyAMA0` |
-| Display              | HDMI or 7" RPi Touchscreen       |
-| Camera               | Official RPi Cameras (libcamera) |
-| Ethernet             | Yes                              |
-| WiFi                 | Yes - VintageNet                 |
-| Bluetooth            | Untested                         |
-| Audio                | HDMI/Stereo out                  |
-
-## Using
-
-The most common way of using this Nerves System is create a project with `mix
-nerves.new` and to export `MIX_TARGET=rpi5`. See the [Getting started
-guide](https://nerves.hexdocs.pm/getting-started.html#creating-a-new-nerves-app)
-for more information.
-
-If you need custom modifications to this system for your device, clone this
-repository and update as described in [Making custom
-systems](https://nerves.hexdocs.pm/customizing-systems.html).
-
-## Upgrading to 2.0
-
-If your application depended on a pre-2.0 version of this Nerves system and you
-are upgrading, you'll need to start validating firmware after it boots the first
-time. If you don't do this, the Nerves MOTD will show that the firmware hasn't
-been validated when you log in. You can manually validate by calling
-`Nerves.Runtime.validate_firmware/0` or running the `fw_validate` helper at the IEx prompt.
-If you don't do this, the device will run the old firmware on the next reboot.
-
-A simple default way of validating the firmware can be enabled using
-Nerves.Runtime's startup guard feature as described in [Assisted firmware
-validation and automatic
-revert](https://nerves-runtime.hexdocs.pm/readme.html#assisted-firmware-validation-and-automatic-revert).
-Please follow the directions there for the needed config file update.
-
-If in doubt, use `mix nerves.new` to create a new project and compare what it
-creates to your project. If you haven't modified the Nerves-specific
-configuration parts of your project much, the firmware validation piece should
-be the main update.
-
-Please also review your use of `Nerves.Runtime.KV` in your application since the
-`nerves_fw_active` key no longer is used. Use `Nerves.Runtime.firmware_slots/0`
-to determine the active firmware slot. The `nerves_fw_active` key wasn't always
-accurate, so it was removed to avoid a misleading answer. The function call is
-reliable and also a generic way to determine slot status on all Nerves
-platforms.
-
-## Supported WiFi devices
-
-The base image includes drivers for the onboard Raspberry Pi 5 WiFi module
-(`brcmfmac` driver).
-
-## Camera
-
-This system supports the official Raspberry Pi camera modules via
-[`libcamera`](https://libcamera.org/). The `libcamera` applications are included so it's
-possible to replicate many of the examples in the official [Raspberry Pi Camera
-Documentation](https://www.raspberrypi.com/documentation/computers/camera_software.html).
-
-Here's an example commandline to run:
-
-```elixir
-cmd("libcamera-jpeg -n -v -o /data/test.jpeg")
+```
+BootROM → XBL/ABL (Qualcomm, untouched) → U-Boot (Particle fork) → Linux
 ```
 
-On success, you'll get an image in `/data` that you can copy off with `sftp`.
+Because real U-Boot runs on this board, the Nerves A/B firmware update model
+follows the `nerves_system_bbb` pattern rather than the Raspberry Pi one:
 
-Since `libcamera` is being used instead of MMAL, the Elixir
-[picam](https://hex.pm/packages/picam) library won't work.
+* fwup writes A/B root filesystem partitions on UFS
+* The U-Boot environment selects the active slot; `nerves_runtime` /
+  `uboot_env` toggle it from Elixir
+* U-Boot's boot logic (`uboot/uboot.env`) reverts to the previous slot if new
+  firmware never validates itself
 
-## Audio
+Qualcomm-owned partitions (XBL, ABL, modem, fsg, …) are never written by this
+system. Only the U-Boot environment, boot, and Nerves-created rootfs/app
+partitions are touched.
 
-The Raspberry Pi has many options for audio output. This system supports the
-HDMI and stereo audio jack output. The Linux ALSA drivers are used for audio
-output.
+## Safety / recovery
 
-The general Raspberry Pi audio documentation mostly applies to Nerves. For
-example, to force audio out the HDMI port, run:
+Before flashing anything to a Tachyon:
 
-```elixir
-cmd("amixer cset numid=3 2")
-```
+1. Back up manufacturing/provisioning data per Particle's "Restoring Back to
+   Factory Firmware" docs. A restored device won't function without it.
+2. Verify EDL mode works (unplug power, reconnect USB-C + battery, hold the
+   power button ~3 s until the LED flashes yellow). The Particle CLI can
+   reflash factory firmware from `linux-dist.particle.io` — this is the
+   recovery path for every flash operation.
 
-Change the last argument to `amixer` to `1` to output to the stereo output jack.
+Known SysCon quirk: with no battery attached ("fake battery mode"), `reboot`
+powers the board off instead of rebooting. Keep a battery attached during
+development or expect to press the power button after reboots.
 
-## RP1 PIO
+## Storage layout (UFS LUN 0)
 
-The `rpi1-pio` device driver allows use of the PIO hardware using
-[`piolib`](https://github.com/raspberrypi/utils/tree/master/piolib). If you
-don't see `/dev/pio0`, the most likely cause is that you need to update your
-Raspberry Pi's boot EEPROM. See
-[rpi-eeprom](https://github.com/raspberrypi/rpi-eeprom) for binaries. It may be
-easier to upgrade the EEPROM via RaspberryPi OS if the instructions aren't
-clear.
+The Tachyon's UFS uses **4096-byte logical sectors**. Stock LUN 0 is
+`efi` (512 MiB ESP) + `persist` (30 MiB) + `system` (10 GiB+, Ubuntu rootfs).
+Nerves keeps `efi` and `persist` in place and carves `system`'s space into:
 
-## Provisioning devices
+| # | Name      | Start (4K sector) | Size    | Contents                          |
+|---|-----------|-------------------|---------|-----------------------------------|
+| 1 | BOOT      | 6 (stock)         | 512 MiB | FAT32: `Image.a/b`, `tachyon-a/b.dtb` (stock `efi` partition) |
+| 2 | persist   | (stock)           | 30 MiB  | Stock calibration data — never written |
+| 3 | uboot_env | 139264            | 1 MiB   | Raw U-Boot env (128 KiB) at byte 0x22000000 |
+| 4 | rootfs_a  | 139520            | 512 MiB | squashfs                          |
+| 5 | rootfs_b  | 270592            | 512 MiB | squashfs                          |
+| 6 | data      | 401664            | rest    | f2fs application data             |
 
-This system supports storing provisioning information in a small key-value store
-outside of any filesystem. Provisioning is an optional step and reasonable
-defaults are provided if this is missing.
-
-Provisioning information can be queried using the Nerves.Runtime KV store's
-[`Nerves.Runtime.KV.get/1`](https://nerves-runtime.hexdocs.pm/Nerves.Runtime.KV.html#get/1)
-function.
-
-Keys used by this system are:
-
-Key                    | Example Value     | Description
-:--------------------- | :---------------- | :----------
-`nerves_serial_number` | `"12345678"`      | By default, this string is used to create unique hostnames and Erlang node names. If unset, it defaults to part of the Raspberry Pi's device ID.
-
-The normal procedure would be to set these keys once in manufacturing or before
-deployment and then leave them alone.
-
-For example, to provision a serial number on a running device, run the following
-and reboot:
-
-```elixir
-iex> cmd("fw_setenv nerves_serial_number 12345678")
-```
-
-This system supports setting the serial number offline. To do this, set the
-`NERVES_SERIAL_NUMBER` environment variable when burning the firmware. If you're
-programming MicroSD cards using `fwup`, the commandline is:
+All other LUNs (XBL, firmware, modem NV) are untouched. fwup never writes a
+partition table on this platform — the GPT is modified once at provisioning
+time:
 
 ```sh
-sudo NERVES_SERIAL_NUMBER=12345678 fwup path_to_firmware.fw
+# On stock Ubuntu (AFTER the manufacturing-data backup and EDL check!).
+# Verify first that the stock layout matches: sgdisk -p /dev/sda
+sgdisk --delete=3 /dev/sda
+sgdisk --new=3:139264:139519  --typecode=3:8DA63339-0007-60C0-C436-083AC8230908 --change-name=3:uboot_env /dev/sda
+sgdisk --new=4:139520:270591  --typecode=4:0FC63DAF-8483-4772-8E79-3D69D8477DE4 --change-name=4:rootfs_a /dev/sda
+sgdisk --new=5:270592:401663  --typecode=5:0FC63DAF-8483-4772-8E79-3D69D8477DE4 --change-name=5:rootfs_b /dev/sda
+sgdisk --new=6:401664:0       --typecode=6:0FC63DAF-8483-4772-8E79-3D69D8477DE4 --change-name=6:data /dev/sda
 ```
 
-Serial numbers are stored on the MicroSD card so if the MicroSD card is
-replaced, the serial number will need to be reprogrammed. The numbers are stored
-in a U-boot environment block. This is a special region that is separate from
-the application partition so reformatting the application partition will not
-lose the serial number or any other data stored in this block.
+U-Boot (built by this system with the env-SCSI patch, see `uboot/`) is
+flashed to the `uefi_a` partition on LUN 4 once during provisioning. The
+initial Nerves firmware (`fwup -t complete`) is then applied via
+fastboot/EDL — the exact initial-install flow is still being worked out on
+hardware (Phase 2); `mix upload` handles everything after that.
 
-Additional key value pairs can be provisioned by overriding the default
-provisioning.conf file location by setting the environment variable
-`NERVES_PROVISIONING=/path/to/provisioning.conf`. The default provisioning.conf
-will set the `nerves_serial_number`, if you override the location to this file,
-you will be responsible for setting this yourself.
+## Using the system
 
-## Linux kernel and RPi firmware/userland
+To build firmware for the Tachyon:
 
-There's a subtle coupling between the `nerves_system_br` version and the Linux
-kernel version used here. `nerves_system_br` provides the versions of
-`rpi-userland` and `rpi-firmware` that get installed. I prefer to match them to
-the Linux kernel to avoid any issues. Unfortunately, none of these are tagged by
-the Raspberry Pi Foundation so I either attempt to match what's in Raspbian or
-take versions of the repositories that have similar commit times.
+```sh
+export MIX_TARGET=tachyon
+mix deps.get
+mix firmware
+```
 
-## Linux kernel configuration
+This system is not published to hex.pm; reference it from your project as a
+git/path dependency:
 
-The Linux kernel compiled for Nerves is a stripped down version of the default
-Raspberry Pi Linux kernel. This is done to remove unnecessary features, select
-some Nerves-specific features like F2FS and SquashFS support, and to save space.
+```elixir
+{:nerves_system_tachyon, github: "ringvold/nerves_system_tachyon", runtime: false, targets: :tachyon}
+```
 
+## Console access
+
+The IEx console is on the Linux serial console UART, exposed on the 10-pin
+(2×5) debug connector. Particle's debug adapter breaks this out together with
+the SysCon UART. Serial settings: 115200 8N1.
+
+## Provenance
+
+This repository started as a clone of
+[`nerves_system_rpi5`](https://github.com/nerves-project/nerves_system_rpi5)
+(toolchain and Buildroot skeleton) with boot logic modeled on
+[`nerves_system_bbb`](https://github.com/nerves-project/nerves_system_bbb)
+(real U-Boot A/B slot selection).

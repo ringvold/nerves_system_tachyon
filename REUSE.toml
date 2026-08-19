@@ -10,6 +10,8 @@ path = [
  "REUSE.toml",
  "mix.exs",
  "mix.lock",
+ "project-brief.md",
+ "CLAUDE.md",
  "VERSION"
 ]
 precedence = "aggregate"
@@ -42,19 +44,26 @@ SPDX-License-Identifier = "GPL-2.0-or-later"
 # Linux kernel derived or related files
 [[annotations]]
 path = [
- "linux-6.18.defconfig",
- "ramoops-pi4-overlay.dts"
+ "linux/**"
 ]
 precedence = "override"
 SPDX-FileCopyrightText = "Various"
 SPDX-License-Identifier = "GPL-2.0-only"
+
+# U-Boot derived or related files
+[[annotations]]
+path = [
+ "uboot/**"
+]
+precedence = "override"
+SPDX-FileCopyrightText = "Various"
+SPDX-License-Identifier = "GPL-2.0-or-later"
 
 # Fwup config files
 [[annotations]]
 path = [
  "fwup-ops.conf",
  "fwup.conf",
- "fwup.conf.eex",
  "fwup_include/*"
 ]
 precedence = "aggregate"
@@ -65,9 +74,6 @@ SPDX-License-Identifier = "CC0-1.0"
 [[annotations]]
 path = [
  "busybox.fragment",
- "cmdline-a.txt",
- "cmdline-b.txt",
- "config.txt",
  "rootfs_overlay/etc/boardid.config",
  "rootfs_overlay/etc/erlinit.config",
  "rootfs_overlay/etc/fw_env.config"
@@ -75,12 +81,3 @@ path = [
 precedence = "aggregate"
 SPDX-FileCopyrightText = "None"
 SPDX-License-Identifier = "CC0-1.0"
-
-# https://en.wikipedia.org/wiki/Raspberry_Pi#/media/File:RaspberryPi_5B_28-08-2024.svg
-[[annotations]]
-path = [
- "assets/images/RaspberryPi_5B.svg"
-]
-precedence = "aggregate"
-SPDX-FileCopyrightText = "Wikimedia user Efa"
-SPDX-License-Identifier = "CC-BY-SA-4.0"
