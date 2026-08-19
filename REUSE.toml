@@ -12,6 +12,7 @@ path = [
  "mix.lock",
  "project-brief.md",
  "CLAUDE.md",
+ "TODO.md",
  "VERSION"
 ]
 precedence = "aggregate"
