@@ -25,10 +25,12 @@ start a phase before the previous one boots on hardware.
 - [ ] Re-pin kernel: device runs `6.8.0-1058.59+particle1`; our
       `nerves_defconfig` pins tag `stable-6.8.0-1058.59particle3`. Check
       `particle-iot/tachyon-ubuntu-24.04-kernel` tags and align
-- [ ] Run the first full system build (Linux desktop:
-      `mix deps.get && mix nerves.system.shell`) to shake out the U-Boot
-      env-SCSI patch compile, the defconfig `#include` handling, and the
-      kernel fragment
+- [x] First full system build PASSED (2026-08-30, Mac/Docker): env-SCSI
+      U-Boot patch compiles, kernel builds from the harvested device config
+      + fragment, artifact packaged. Fixes recorded in git history
+      (xxd Docker image, device kernel config base, PCS_XPCS/certs/iris
+      fragment disables). Desktop (distrobox) build also set up
+      (GNU install + mise OTP 29)
 - [ ] Diff `linux/nerves.fragment` against the device's shipping config
       (`~/tachyon-backups/tachyon-recon-20260830-220055/kernel-config.txt` —
       note: SQUASHFS=y, GENI console=y already in stock)
