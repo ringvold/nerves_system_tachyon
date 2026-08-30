@@ -25,14 +25,15 @@ BR2_GENERATE_LOCALE="en_US.UTF-8"
 BR2_ROOTFS_OVERLAY="${BR2_EXTERNAL_NERVES_PATH}/board/nerves-common/rootfs_overlay ${NERVES_DEFCONFIG_DIR}/rootfs_overlay"
 BR2_ROOTFS_POST_BUILD_SCRIPT="${NERVES_DEFCONFIG_DIR}/post-build.sh ${BR2_EXTERNAL_NERVES_PATH}/board/nerves-common/post-build.sh"
 BR2_ROOTFS_POST_IMAGE_SCRIPT="${NERVES_DEFCONFIG_DIR}/post-createfs.sh"
-# Particle's Ubuntu 6.8 kernel tree for the Tachyon, pinned to the tag that
-# matches the shipping 24.04 stock release (versions.json pins
-# 6.8.0-1058.59+particle3). The tree has no classic defconfig (Ubuntu
+# Particle's Ubuntu 6.8 kernel tree for the Tachyon. The 24.04.4 beta on
+# hardware runs 6.8.0-1058.59+particle1 (verified 2026-08-30); particle6 is
+# the newest revision on the same 1058.59 base and is what current
+# tachyon-composer releases ship. The tree has no classic defconfig (Ubuntu
 # annotation-based config), so start from the arm64 arch defconfig and apply
 # the Nerves fragment on top.
 BR2_LINUX_KERNEL=y
 BR2_LINUX_KERNEL_CUSTOM_TARBALL=y
-BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="https://github.com/particle-iot/tachyon-ubuntu-24.04-kernel/archive/refs/tags/stable-6.8.0-1058.59particle3.tar.gz"
+BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="https://github.com/particle-iot/tachyon-ubuntu-24.04-kernel/archive/refs/tags/stable-6.8.0-1058.59particle6.tar.gz"
 BR2_LINUX_KERNEL_USE_ARCH_DEFAULT_CONFIG=y
 BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="${NERVES_DEFCONFIG_DIR}/linux/nerves.fragment"
 BR2_LINUX_KERNEL_DTS_SUPPORT=y
@@ -60,9 +61,10 @@ BR2_PACKAGE_WPA_SUPPLICANT_CTRL_IFACE=y
 BR2_PACKAGE_HOST_KMOD_XZ=y
 # U-Boot from Particle's fork (2025.04 base, "tachyon" branch), pinned by
 # commit. The Nerves patch dir adds the env-in-SCSI backport; the fragment
-# stores the environment in the uboot_env partition. The resulting
-# u-boot-dtb.bin is flashed to the uefi_a partition during provisioning (see
-# README) and is not part of the fwup update.
+# stores the environment in the uboot_env partition (scsi 0:11). The
+# resulting u-boot-dtb.bin is merged into the XBL partitions with Particle's
+# patchxbl/qtestsign install.sh flow during provisioning (see README) and is
+# not part of the fwup update.
 BR2_TARGET_UBOOT=y
 BR2_TARGET_UBOOT_BUILD_SYSTEM_KCONFIG=y
 BR2_TARGET_UBOOT_CUSTOM_GIT=y
