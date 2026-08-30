@@ -70,3 +70,6 @@ CONFIG_QCOM_WDT=y
 # CONFIG_DWMAC_INTEL_PLAT is not set
 # CONFIG_NGBE is not set
 # CONFIG_TXGBE is not set
+# ...and the NXP SJA1105 DSA switch driver, which also selects PCS_XPCS.
+# CONFIG_NET_DSA_SJA1105 is not set
+# CONFIG_NET_DSA_TAG_SJA1105 is not set
