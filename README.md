@@ -59,38 +59,43 @@ development or expect to press the power button after reboots.
 
 ## Storage layout (UFS LUN 0)
 
-The Tachyon's UFS uses **4096-byte logical sectors**. Stock LUN 0 is
-`efi` (512 MiB ESP) + `persist` (30 MiB) + `system` (10 GiB+, Ubuntu rootfs).
-Nerves keeps `efi` and `persist` in place and carves `system`'s space into:
+The Tachyon's UFS uses **4096-byte logical sectors**. As verified on hardware
+(24.04.4 beta, 2026-08-30), the deployed image keeps the gen-1 GPT on LUN 0
+(`/dev/sda`): stock partitions p1-p10 (`frp` ... `userdata`) followed by
+`system_a` (~112 GiB Ubuntu rootfs). Nerves keeps p1-p10 untouched and
+replaces `system_a` with five partitions (all 1 MiB-aligned):
 
-| # | Name      | Start (4K sector) | Size    | Contents                          |
-|---|-----------|-------------------|---------|-----------------------------------|
-| 1 | BOOT      | 6 (stock)         | 512 MiB | FAT32: `Image.a/b`, `tachyon-a/b.dtb` (stock `efi` partition) |
-| 2 | persist   | (stock)           | 30 MiB  | Stock calibration data — never written |
-| 3 | uboot_env | 139264            | 1 MiB   | Raw U-Boot env (128 KiB) at byte 0x22000000 |
-| 4 | rootfs_a  | 139520            | 512 MiB | squashfs                          |
-| 5 | rootfs_b  | 270592            | 512 MiB | squashfs                          |
-| 6 | data      | 401664            | rest    | f2fs application data             |
+| #  | Name      | Start (4K LBA) | End (4K LBA) | Size     | Contents                          |
+|----|-----------|----------------|--------------|----------|-----------------------------------|
+| 11 | uboot_env | 1198848        | 1199103      | 1 MiB    | Raw U-Boot env (128 KiB) at start |
+| 12 | boot      | 1199104        | 1231871      | 128 MiB  | FAT: `Image.a/b`, `tachyon-a/b.dtb` |
+| 13 | rootfs_a  | 1231872        | 1362943      | 512 MiB  | squashfs                          |
+| 14 | rootfs_b  | 1362944        | 1494015      | 512 MiB  | squashfs                          |
+| 15 | data      | 1494016        | 30599162     | ~111 GiB | f2fs application data             |
 
-All other LUNs (XBL, firmware, modem NV) are untouched. fwup never writes a
-partition table on this platform — the GPT is modified once at provisioning
-time:
+The stock ESP (`boot_b` = `/dev/sdg25`, GRUB) and every other LUN (XBL,
+modem NV, firmware, ...) are untouched. fwup never writes a partition table
+on this platform — the GPT is modified once at provisioning time:
 
 ```sh
 # On stock Ubuntu (AFTER the manufacturing-data backup and EDL check!).
-# Verify first that the stock layout matches: sgdisk -p /dev/sda
-sgdisk --delete=3 /dev/sda
-sgdisk --new=3:139264:139519  --typecode=3:8DA63339-0007-60C0-C436-083AC8230908 --change-name=3:uboot_env /dev/sda
-sgdisk --new=4:139520:270591  --typecode=4:0FC63DAF-8483-4772-8E79-3D69D8477DE4 --change-name=4:rootfs_a /dev/sda
-sgdisk --new=5:270592:401663  --typecode=5:0FC63DAF-8483-4772-8E79-3D69D8477DE4 --change-name=5:rootfs_b /dev/sda
-sgdisk --new=6:401664:0       --typecode=6:0FC63DAF-8483-4772-8E79-3D69D8477DE4 --change-name=6:data /dev/sda
+# Verify first that the layout matches: cat /sys/block/sda/sda11/start → 1198728
+sgdisk --delete=11 /dev/sda
+sgdisk --new=11:1198848:1199103  --typecode=11:8DA63339-0007-60C0-C436-083AC8230908 --change-name=11:uboot_env /dev/sda
+sgdisk --new=12:1199104:1231871  --typecode=12:EBD0A0A2-B9E5-4433-87C0-68B6B72699C7 --change-name=12:boot /dev/sda
+sgdisk --new=13:1231872:1362943  --typecode=13:0FC63DAF-8483-4772-8E79-3D69D8477DE4 --change-name=13:rootfs_a /dev/sda
+sgdisk --new=14:1362944:1494015  --typecode=14:0FC63DAF-8483-4772-8E79-3D69D8477DE4 --change-name=14:rootfs_b /dev/sda
+sgdisk --new=15:1494016:30599162 --typecode=15:0FC63DAF-8483-4772-8E79-3D69D8477DE4 --change-name=15:data /dev/sda
 ```
 
-U-Boot (built by this system with the env-SCSI patch, see `uboot/`) is
-flashed to the `uefi_a` partition on LUN 4 once during provisioning. The
-initial Nerves firmware (`fwup -t complete`) is then applied via
-fastboot/EDL — the exact initial-install flow is still being worked out on
-hardware (Phase 2); `mix upload` handles everything after that.
+U-Boot itself does not live on LUN 0: on the Tachyon it is embedded in the
+XBL partitions. Our U-Boot (built with the env-SCSI patch, see `uboot/`) is
+installed with Particle's supported `tachyon-u-boot` flow — `install.sh`
+reads back `xbl_a`, merges `u-boot-dtb.bin` in with `patchxbl.py`,
+test-signs the result with `qtestsign` and dd-writes it to `xbl_a` and
+`xbl_b`. A bad bootloader is always recoverable via EDL factory restore.
+The initial Nerves firmware (`fwup -t complete`) is applied after the sgdisk
+repartitioning above; `mix upload` handles everything after that.
 
 ## Using the system
 
