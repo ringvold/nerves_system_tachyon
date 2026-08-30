@@ -47,6 +47,12 @@ defmodule NervesSystemTachyon.MixProject do
         {:github_releases, "#{@github_organization}/#{@app}"}
       ],
       build_runner_opts: build_runner_opts(),
+      # On non-Linux hosts the Docker build runner is used. Particle's U-Boot
+      # needs xxd, which the stock nerves_system_br image lacks, so build a
+      # thin derived image (support/docker/nerves_system_tachyon).
+      build_runner_config: [
+        docker: {"support/docker/nerves_system_tachyon", "nerves_system_tachyon_br:1.34.1"}
+      ],
       platform: Nerves.System.BR,
       platform_config: [
         defconfig: "nerves_defconfig"
