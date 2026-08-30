@@ -29,12 +29,16 @@ BR2_ROOTFS_POST_IMAGE_SCRIPT="${NERVES_DEFCONFIG_DIR}/post-createfs.sh"
 # hardware runs 6.8.0-1058.59+particle1 (verified 2026-08-30); particle6 is
 # the newest revision on the same 1058.59 base and is what current
 # tachyon-composer releases ship. The tree has no classic defconfig (Ubuntu
-# annotation-based config), so start from the arm64 arch defconfig and apply
-# the Nerves fragment on top.
+# annotation-based config). The plain arm64 arch defconfig does NOT build
+# this tree (the ubuntu/qcom out-of-tree drivers assume Ubuntu's config), so
+# use the exact config harvested from the running 24.04.4 device
+# (/boot/config-6.8.0-1058-particle) as the base and apply the Nerves
+# fragment on top.
 BR2_LINUX_KERNEL=y
 BR2_LINUX_KERNEL_CUSTOM_TARBALL=y
 BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="https://github.com/particle-iot/tachyon-ubuntu-24.04-kernel/archive/refs/tags/stable-6.8.0-1058.59particle6.tar.gz"
-BR2_LINUX_KERNEL_USE_ARCH_DEFAULT_CONFIG=y
+BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG=y
+BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE="${NERVES_DEFCONFIG_DIR}/linux/config-6.8.0-1058-particle"
 BR2_LINUX_KERNEL_CONFIG_FRAGMENT_FILES="${NERVES_DEFCONFIG_DIR}/linux/nerves.fragment"
 BR2_LINUX_KERNEL_DTS_SUPPORT=y
 BR2_LINUX_KERNEL_INTREE_DTS_NAME="qcom/qcm6490-tachyon"
