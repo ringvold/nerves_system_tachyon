@@ -51,3 +51,22 @@ CONFIG_NLS_ISO8859_1=y
 # Hardware watchdog for Erlang heart
 CONFIG_WATCHDOG=y
 CONFIG_QCOM_WDT=y
+
+#
+# Ubuntu's sauce bundles pcs-xpcs-qcom.o into the pcs_xpcs module
+# (drivers/net/pcs/Makefile), and that file has int-conversion bugs that
+# GCC 15 (our toolchain) rejects while Ubuntu's GCC 13 only warns. The
+# Tachyon has no wired ethernet, so drop the XPCS helper and the
+# stmmac/wangxun drivers that select PCS_XPCS.
+#
+# CONFIG_PCS_XPCS is not set
+# CONFIG_STMMAC_ETH is not set
+# CONFIG_STMMAC_PLATFORM is not set
+# CONFIG_STMMAC_PCI is not set
+# CONFIG_DWMAC_DWC_QOS_ETH is not set
+# CONFIG_DWMAC_GENERIC is not set
+# CONFIG_DWMAC_IPQ806X is not set
+# CONFIG_DWMAC_QCOM_ETHQOS is not set
+# CONFIG_DWMAC_INTEL_PLAT is not set
+# CONFIG_NGBE is not set
+# CONFIG_TXGBE is not set
