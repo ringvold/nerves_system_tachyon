@@ -73,3 +73,9 @@ CONFIG_QCOM_WDT=y
 # ...and the NXP SJA1105 DSA switch driver, which also selects PCS_XPCS.
 # CONFIG_NET_DSA_SJA1105 is not set
 # CONFIG_NET_DSA_TAG_SJA1105 is not set
+
+# Ubuntu's config points the kernel keyring at Canonical's cert files,
+# which only exist inside Ubuntu's own packaging (debian/*.pem). Build
+# without preloaded trusted/revocation certs.
+CONFIG_SYSTEM_TRUSTED_KEYS=""
+CONFIG_SYSTEM_REVOCATION_KEYS=""
