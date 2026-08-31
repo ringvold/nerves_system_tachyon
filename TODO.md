@@ -34,9 +34,8 @@ start a phase before the previous one boots on hardware.
 - [x] Kernel VERIFIED ON HARDWARE (2026-08-31): our 6.8.12 Image boots the
       stock Ubuntu userspace via a GRUB test entry — Wi-Fi (ath11k), DRM and
       182 modules load. Lesson: initrd-less boot requires root=PARTUUID=/dev
-      paths, never root=UUID= (kernel can't resolve fs UUIDs). Remaining
-      micro-item: boot once with our kernel-tree DTB (GRUB entry 2) —
-      firmware DTB was used for the passing test
+      paths, never root=UUID= (kernel can't resolve fs UUIDs). Our kernel-tree
+      DTB also verified (booted via GRUB devicetree command)
 - [ ] Get the Particle debug adapter (10-pin serial console) — essential
       before any repartitioning/flash
 
