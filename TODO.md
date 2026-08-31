@@ -31,9 +31,12 @@ start a phase before the previous one boots on hardware.
       (xxd Docker image, device kernel config base, PCS_XPCS/certs/iris
       fragment disables). Desktop (distrobox) build also set up
       (GNU install + mise OTP 29)
-- [ ] Diff `linux/nerves.fragment` against the device's shipping config
-      (`~/tachyon-backups/tachyon-recon-20260830-220055/kernel-config.txt` —
-      note: SQUASHFS=y, GENI console=y already in stock)
+- [x] Kernel VERIFIED ON HARDWARE (2026-08-31): our 6.8.12 Image boots the
+      stock Ubuntu userspace via a GRUB test entry — Wi-Fi (ath11k), DRM and
+      182 modules load. Lesson: initrd-less boot requires root=PARTUUID=/dev
+      paths, never root=UUID= (kernel can't resolve fs UUIDs). Remaining
+      micro-item: boot once with our kernel-tree DTB (GRUB entry 2) —
+      firmware DTB was used for the passing test
 - [ ] Get the Particle debug adapter (10-pin serial console) — essential
       before any repartitioning/flash
 
