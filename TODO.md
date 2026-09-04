@@ -57,14 +57,20 @@ start a phase before the previous one boots on hardware.
       also runs in the booti path (ft_board_setup) — Wi-Fi MAC
       e8:8d:a6:6b:4e:51 verified in the booted system. Serial input needs
       char pacing (~20 ms/char, no flow control)
-- [ ] REBUILD U-Boot: the built artifact still has the wrong
-      `CONFIG_ENV_SCSI_HW_PARTITION="0:11"` baked in — rebuild with `0:b`
-      before installing
-- [ ] Build our U-Boot (env-SCSI patch, `CONFIG_ENV_SCSI_HW_PARTITION="0:b"`)
-      and install via Particle's `tachyon-u-boot` `install.sh` flow
-      (patchxbl.py + qtestsign → dd to xbl_a/xbl_b). Recovery: EDL restore
+- [x] OUR U-BOOT INSTALLED AND RUNNING FROM XBL (2026-09-04): rebuilt with
+      `0:b` + `CONFIG_BOOTDELAY=1`, installed via Particle's install.sh
+      `--device` flow (qtestsign clone in /tmp/qtoolsign on device; xbl_a =
+      /dev/sdc1, xbl_b = /dev/sdb1). Verified on serial: our banner
+      (Jul 15 2026 build date), "Loading Environment from SCSI" → bad-CRC
+      fallback to the built-in Particle default env (p11 is still ext4) →
+      bootefi bootmgr → stock GRUB → stock Ubuntu boots normally. FSG MAC
+      fixup and the 1 s autoboot window both work. Stock xbl_a/b backups:
+      device ~/xbl_*-stock.backup + Mac ~/tachyon-backups/2026-09-04/
 - [ ] Keep a battery attached (SysCon fake-battery bug still unfixed:
       `reboot` powers off)
+
+Phase 1 gate PASSED: our U-Boot runs from flash, our kernel+DTB boot from
+the U-Boot prompt. Phase 2 (repartitioning) is unlocked.
 
 ## Phase 2 — Nerves on flash (gated on Phase 1 booting)
 
