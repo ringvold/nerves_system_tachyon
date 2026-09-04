@@ -7,6 +7,10 @@
 # U-Boot, fwup and Elixir's uboot_env library all share the same block.
 # Requires the env-SCSI backport patch in this directory.
 CONFIG_ENV_IS_IN_SCSI=y
+# Particle's defconfig drops the saveenv command (their env is in-memory
+# only). The Nerves A/B logic persists state from U-Boot, so bring it back.
+# Verified missing on hardware: "Unknown command 'saveenv'".
+CONFIG_CMD_SAVEENV=y
 CONFIG_ENV_SCSI_HW_PARTITION="0:b"
 CONFIG_ENV_SIZE=0x20000
 CONFIG_ENV_OVERWRITE=y

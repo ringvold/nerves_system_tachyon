@@ -74,10 +74,30 @@ the U-Boot prompt. Phase 2 (repartitioning) is unlocked.
 
 ## Phase 2 — Nerves on flash (gated on Phase 1 booting)
 
-- [ ] Repartition LUN 0 with the sgdisk commands in README.md (delete p11
-      system_a → create p11-p15). Stock Ubuntu becomes unbootable; EDL
-      restores it
-- [ ] Apply `fwup -t complete`, boot Nerves from rootfs_a, verify A/B
+- [x] Repartitioned LUN 0 on hardware (2026-09-04): RAM-booted our Buildroot
+      rootfs as initramfs from the U-Boot prompt (`booti <kernel> <initrd> <dtb>`,
+      `rdinit=/bin/sh`), ran support/phase2-install.sh (sgdisk delete p11 →
+      create p11-p15, then `fwup -t complete`). GPT verified exactly as
+      designed; fwup reported Success. Added BR2_PACKAGE_GPTFDISK for sgdisk
+      on the target. Stock Ubuntu is now gone; EDL restore is recovery
+- [x] Two boot-model bugs found & fixed (2026-09-04), NOT yet re-verified on
+      hardware:
+      1. fwup FAT is 512-byte-sector only; U-Boot refuses FAT whose sector
+         size != device's 4096 ("FAT sector size mismatch (fs=512,dev=4096)").
+         FIX: no filesystem on p12 — kernel+DTB are raw_write'n at fixed
+         offsets (KERNEL_A/B, DTB_A/B in fwup-common.conf) and read with
+         `scsi read` in uboot.env. LBAs there = fwup 512-byte offsets / 8.
+      2. Particle's U-Boot defconfig drops `saveenv` ("Unknown command").
+         FIX: CONFIG_CMD_SAVEENV=y in uboot/nerves.fragment — needs a U-Boot
+         REBUILD + REINSTALL into XBL (patchxbl needs python3, not in the
+         rescue rootfs — plan the reinstall path). Until then nerves_init's
+         saveenv fails but is non-fatal (`;`-separated), so A/B boot state
+         won't persist yet
+- [ ] Re-flash device with the corrected fwup (new env + raw kernel layout)
+      and boot Nerves from rootfs_a. Transport TBD: device has no OS now, so
+      either re-run fwup from a rescue shell (need new tachyon.fw on device)
+      or fix in place (loady env + dd kernel from p10 /nerves-install/)
+- [ ] Rebuild + reinstall U-Boot with CONFIG_CMD_SAVEENV, then verify A/B
       upgrade + revert on hardware
 - [ ] Verify `mix upload` / SSH via nerves_ssh works end-to-end
 
