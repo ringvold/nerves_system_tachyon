@@ -114,9 +114,14 @@ the U-Boot prompt. Phase 2 (repartitioning) is unlocked.
       `support/edl/gen-rawprogram0.sh <images> ` then
       `particle flash --tachyon prog_firehose_ddr.elf rawprogram0-nerves.xml`
       (LUN 0, Nerves sectors only; firehose elf ships in the CLI assets and
-      every OS package zip). UNVERIFIED: whether qdl/XBL accept a single
-      LUN0 XML without the rawprogram1-6/patch set — test on hardware.
-      Long term: Wi-Fi firmware → `mix upload` over SSH
+      every OS package zip). VERIFIED ON HARDWARE 2026-09-04: `particle
+      flash --tachyon <bundle dir>` (support/edl/make-bundle.sh) flashed all
+      six entries in 8.9 s (rootfs at 59 MB/s) with a single LUN0 XML and no
+      patch files; the board then booted the identical Nerves chain. This is
+      the initial-install path. Long term: Wi-Fi firmware → `mix upload`
+      over SSH. Stock Ubuntu is not worth preserving — only avoid bricking
+      (EDL is ROM+SysCon, unaffected by anything we write to LUN 0/XBL;
+      factory restore = stock zip flash + `particle tachyon restore`)
 - [ ] Rebuild + reinstall U-Boot with CONFIG_CMD_SAVEENV, then verify A/B
       upgrade + revert on hardware
 - [ ] Verify `mix upload` / SSH via nerves_ssh works end-to-end
