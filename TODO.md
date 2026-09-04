@@ -36,18 +36,33 @@ start a phase before the previous one boots on hardware.
       182 modules load. Lesson: initrd-less boot requires root=PARTUUID=/dev
       paths, never root=UUID= (kernel can't resolve fs UUIDs). Our kernel-tree
       DTB also verified (booted via GRUB devicetree command)
-- [ ] Get the Particle debug adapter (10-pin serial console) — essential
-      before any repartitioning/flash
+- [x] Particle debug adapter received and verified (2026-09-04): both TTYs
+      work at 115200 (`cu.usbserial-…0` = SysCon, `…1` = Linux/U-Boot
+      console); full PBL→SBL→U-Boot→kernel boot log captured in
+      `~/tachyon-backups/serial-logs/`. Secure Boot: Off confirmed in SBL log
 
 ## Phase 1 — Boot our things (reversible steps first)
 
-- [ ] Build our U-Boot (env-SCSI patch, `CONFIG_ENV_SCSI_HW_PARTITION="0:11"`)
+- [x] U-Boot serial console verified: autoboot interrupt (1 s window) works;
+      `scsi scan` numbering CONFIRMED — `scsi 0` = LUN 0 = /dev/sda
+      (device 0 size 30599168×4096 matches), devices 1-6 = LUN 1-6.
+      Stock env captured (618 bytes, `bootcmd=bootefi bootmgr`, env "in
+      nowhere"). LESSON: U-Boot dev:part strings parse the partition number
+      as HEX (`0:11` → "Invalid partition 17"); partition 11 is `0:b`.
+      Fixed in uboot.env (`bootpart=0:c`) and nerves.fragment
+      (`CONFIG_ENV_SCSI_HW_PARTITION="0:b"`)
+- [x] Our Buildroot kernel booted MANUALLY from the U-Boot prompt
+      (2026-09-04): `ext4load scsi 0:b` (kernel 41.5 MB in 50 ms) + our DTB,
+      `booti` → Ubuntu userspace, no GRUB involved. U-Boot's FSG MAC fixup
+      also runs in the booti path (ft_board_setup) — Wi-Fi MAC
+      e8:8d:a6:6b:4e:51 verified in the booted system. Serial input needs
+      char pacing (~20 ms/char, no flow control)
+- [ ] REBUILD U-Boot: the built artifact still has the wrong
+      `CONFIG_ENV_SCSI_HW_PARTITION="0:11"` baked in — rebuild with `0:b`
+      before installing
+- [ ] Build our U-Boot (env-SCSI patch, `CONFIG_ENV_SCSI_HW_PARTITION="0:b"`)
       and install via Particle's `tachyon-u-boot` `install.sh` flow
       (patchxbl.py + qtestsign → dd to xbl_a/xbl_b). Recovery: EDL restore
-- [ ] Verify U-Boot serial console + `scsi scan` sees LUN 0 partitions;
-      confirm U-Boot's scsi device numbering (assumed `scsi 0` = LUN 0/sda)
-- [ ] Boot the Buildroot kernel manually from the U-Boot prompt before any
-      fwup install
 - [ ] Keep a battery attached (SysCon fake-battery bug still unfixed:
       `reboot` powers off)
 

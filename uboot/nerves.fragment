@@ -1,12 +1,13 @@
 # Nerves configuration fragment applied on top of qcm6490_tachyon_defconfig
 #
 # Store the U-Boot environment raw at the start of the uboot_env GPT
-# partition (scsi 0:11 = UFS LUN 0, partition 11 — see
+# partition (scsi 0:b = UFS LUN 0, partition 11 — the partition number is
+# HEX, as parsed by blk_get_device_part_str(); see
 # fwup_include/fwup-common.conf for the verified LUN 0 layout) so that
 # U-Boot, fwup and Elixir's uboot_env library all share the same block.
 # Requires the env-SCSI backport patch in this directory.
 CONFIG_ENV_IS_IN_SCSI=y
-CONFIG_ENV_SCSI_HW_PARTITION="0:11"
+CONFIG_ENV_SCSI_HW_PARTITION="0:b"
 CONFIG_ENV_SIZE=0x20000
 CONFIG_ENV_OVERWRITE=y
 
