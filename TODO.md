@@ -93,10 +93,25 @@ the U-Boot prompt. Phase 2 (repartitioning) is unlocked.
          rescue rootfs — plan the reinstall path). Until then nerves_init's
          saveenv fails but is non-fatal (`;`-separated), so A/B boot state
          won't persist yet
-- [ ] Re-flash device with the corrected fwup (new env + raw kernel layout)
-      and boot Nerves from rootfs_a. Transport TBD: device has no OS now, so
-      either re-run fwup from a rescue shell (need new tachyon.fw on device)
-      or fix in place (loady env + dd kernel from p10 /nerves-install/)
+- [x] AUTOMATIC BOOT CHAIN VERIFIED (2026-09-04 late): fixed in place from
+      the U-Boot prompt — kernel/DTB `ext4load`ed from p10 and `scsi write`n
+      raw to KERNEL_A/DTB_A, new uboot-env.bin sent with `loady` (ymodem via
+      lrzsz `lsz --ymodem` on ONE bidirectional port FD, logger stopped
+      first) and `scsi write`n to p11 LBA 0x124B00. From reset, with no
+      manual input: env loads from SCSI → `scsi read` kernel + DTB →
+      `Starting kernel` → squashfs root → erlinit. Stops only at
+      "erlinit: Erlang installation not found" because the bare system
+      image has no OTP/app — expected. Board parked at the U-Boot prompt.
+      Gotchas: 0x124800 ≠ 1198848 (it is 0x124B00) — one env write landed
+      in the tail of p10 (stock userdata; harmless for Nerves, but treat
+      p10 as possibly damaged). SysCon brownout (vbat < 2046 mV floor)
+      powered the board off during a pause — attach a battery
+- [ ] Build a real firmware: minimal Nerves app (nerves_pack/nerves_ssh)
+      with this system as a path dep → `mix firmware` → rootfs with OTP +
+      release. Then get it onto the device — no network in Nerves yet, so
+      either `loady` p13 at a high baud (921600+; ~130 MB), fastboot from
+      U-Boot, or an EDL/QDL rawprogram for rootfs_a (the proper initial
+      install story). Long term: Wi-Fi firmware → `mix upload` over SSH
 - [ ] Rebuild + reinstall U-Boot with CONFIG_CMD_SAVEENV, then verify A/B
       upgrade + revert on hardware
 - [ ] Verify `mix upload` / SSH via nerves_ssh works end-to-end
