@@ -11,5 +11,7 @@ CONFIG_ENV_SCSI_HW_PARTITION="0:b"
 CONFIG_ENV_SIZE=0x20000
 CONFIG_ENV_OVERWRITE=y
 
-# Boot straight into the Nerves boot logic instead of the bootmenu delay
-CONFIG_BOOTDELAY=0
+# Keep a 1 s autoboot window (same as stock) so the U-Boot prompt stays
+# reachable over serial — it is the recovery/debug path during bring-up.
+# Consider 0 for production once A/B revert is proven.
+CONFIG_BOOTDELAY=1

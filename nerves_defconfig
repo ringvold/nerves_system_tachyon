@@ -65,7 +65,8 @@ BR2_PACKAGE_WPA_SUPPLICANT_CTRL_IFACE=y
 BR2_PACKAGE_HOST_KMOD_XZ=y
 # U-Boot from Particle's fork (2025.04 base, "tachyon" branch), pinned by
 # commit. The Nerves patch dir adds the env-in-SCSI backport; the fragment
-# stores the environment in the uboot_env partition (scsi 0:11). The
+# stores the environment in the uboot_env partition (scsi 0:b — U-Boot
+# part numbers are hex, GPT partition 11). The
 # resulting u-boot-dtb.bin is merged into the XBL partitions with Particle's
 # patchxbl/qtestsign install.sh flow during provisioning (see README) and is
 # not part of the fwup update.
