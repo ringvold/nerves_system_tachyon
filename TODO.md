@@ -110,8 +110,13 @@ the U-Boot prompt. Phase 2 (repartitioning) is unlocked.
       with this system as a path dep → `mix firmware` → rootfs with OTP +
       release. Then get it onto the device — no network in Nerves yet, so
       either `loady` p13 at a high baud (921600+; ~130 MB), fastboot from
-      U-Boot, or an EDL/QDL rawprogram for rootfs_a (the proper initial
-      install story). Long term: Wi-Fi firmware → `mix upload` over SSH
+      U-Boot, or — preferred — EDL via Particle CLI's bundled qdl:
+      `support/edl/gen-rawprogram0.sh <images> ` then
+      `particle flash --tachyon prog_firehose_ddr.elf rawprogram0-nerves.xml`
+      (LUN 0, Nerves sectors only; firehose elf ships in the CLI assets and
+      every OS package zip). UNVERIFIED: whether qdl/XBL accept a single
+      LUN0 XML without the rawprogram1-6/patch set — test on hardware.
+      Long term: Wi-Fi firmware → `mix upload` over SSH
 - [ ] Rebuild + reinstall U-Boot with CONFIG_CMD_SAVEENV, then verify A/B
       upgrade + revert on hardware
 - [ ] Verify `mix upload` / SSH via nerves_ssh works end-to-end
